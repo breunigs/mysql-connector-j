@@ -62,11 +62,17 @@ public class MysqlTextValueDecoder implements ValueDecoder {
     /** Max string length of a signed long = 9223372036854775807 (19+1 for minus sign) */
     private static final int MAX_SIGNED_LONG_LEN = 20;
 
+    /** Min supported year when parsing DATE, DATETIME and TIMESTAMP columns. This is more lenient than the ranges stated in the MySQL documentation. */
+    private static final int DATE_MIN_VALID_YEAR = 1;
+
     public <T> T decodeDate(byte[] bytes, int offset, int length, ValueFactory<T> vf) {
         if (length != DATE_BUF_LEN) {
             throw new DataReadException(Messages.getString("ResultSet.InvalidLengthForType", new Object[] { length, "DATE" }));
         }
         int year = StringUtils.getInt(bytes, offset, offset + 4);
+        if (year < DATE_MIN_VALID_YEAR) {
+            return vf.createFromDate(0, 0, 0);
+        }
         int month = StringUtils.getInt(bytes, offset + 5, offset + 7);
         int day = StringUtils.getInt(bytes, offset + 8, offset + 10);
         return vf.createFromDate(year, month, day);
@@ -164,6 +170,9 @@ public class MysqlTextValueDecoder implements ValueDecoder {
         }
 
         int year = StringUtils.getInt(bytes, offset, offset + 4);
+        if (year < DATE_MIN_VALID_YEAR) {
+            return vf.createFromTimestamp(0, 0, 0, 0, 0, 0, 0);
+        }
         int month = StringUtils.getInt(bytes, offset + 5, offset + 7);
         int day = StringUtils.getInt(bytes, offset + 8, offset + 10);
         int hours = StringUtils.getInt(bytes, offset + 11, offset + 13);

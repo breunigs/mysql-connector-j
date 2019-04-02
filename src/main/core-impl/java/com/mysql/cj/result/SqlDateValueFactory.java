@@ -71,6 +71,9 @@ public class SqlDateValueFactory extends DefaultValueFactory<Date> {
                 if (year == 0 && month == 0 && day == 0) {
                     throw new DataReadException(Messages.getString("ResultSet.InvalidZeroDate"));
                 }
+                if (year <= 0) {
+                    throw new DataReadException(Messages.getString("ResultSet.InvalidYear", new Object[] { year }));
+                }
 
                 this.cal.clear();
                 this.cal.set(year, month - 1, day);
